@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <script
+      type="text/javascript"
+      src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"
+    ></script>
+  </head>
+  <body>
+    <cast-media-player></cast-media-player>
+    <script>
+      const context = cast.framework.CastReceiverContext.getInstance();
+      const playerManager = context.getPlayerManager();
+
+      playerManager.setMessageInterceptor(
+        cast.framework.messages.MessageType.LOAD,
+        (request) => {
+          if (request.media.contentProtection) {
+            request.media.licenseUrl =
+              request.media.contentProtection.licenseUrl;
+          }
+          return request;
+        },
+      );
+
+      context.start();
+    </script>
+  </body>
+</html>
