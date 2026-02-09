@@ -1,8 +1,9 @@
+<!DOCTYPE html>
 <html>
   <head>
     <script
       type="text/javascript"
-      src="//www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"
+      src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"
     ></script>
   </head>
   <body>
@@ -11,18 +12,30 @@
       const context = cast.framework.CastReceiverContext.getInstance();
       const playerManager = context.getPlayerManager();
 
+      // Enable debug logging
+      context.setLoggerLevel(cast.framework.LoggerLevel.DEBUG);
+
       playerManager.setMessageInterceptor(
         cast.framework.messages.MessageType.LOAD,
         (request) => {
-          if (request.media.contentProtection) {
+          console.log("Intercepted LOAD request:", request);
+
+          if (request.media && request.media.contentProtection) {
+            console.log(
+              "Moving licenseUrl from contentProtection to media object"
+            );
             request.media.licenseUrl =
               request.media.contentProtection.licenseUrl;
+          } else {
+            console.log("No contentProtection found in request");
           }
+
           return request;
         },
       );
 
       context.start();
+      console.log("Receiver Context Started");
     </script>
   </body>
 </html>
