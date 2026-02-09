@@ -1,69 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
-    <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
-</head>
-<body>
+  <head>
+    <script
+      type="text/javascript"
+      src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"
+    ></script>
+  </head>
+  <body>
     <cast-media-player></cast-media-player>
     <script>
-        try {
-            const context = cast.framework.CastReceiverContext.getInstance();
-            const playerManager = context.getPlayerManager();
+      const context = cast.framework.CastReceiverContext.getInstance();
+      const playerManager = context.getPlayerManager();
 
-            // Enable debug logging
-            context.setLoggerLevel(cast.framework.LoggerLevel.DEBUG);
+      // Debug Logger
+      const castDebugLogger = cast.debug.CastDebugLogger.getInstance();
+      const LOG_TAG = "MyAPP.LOG";
 
-            // Intercept LOAD requests
-            playerManager.setMessageInterceptor(
-                cast.framework.messages.MessageType.LOAD,
-                (loadRequestData) => {
-                    try {
-                        console.log("LOAD request received:", loadRequestData);
+      // Enable debug logger and show a 'DEBUG MODE' overlay at top left corner.
+      context.addEventListener(cast.framework.system.EventType.READY, () => {
+        if (!castDebugLogger.debugOverlayElement_) {
+          castDebugLogger.setEnabled(true);
 
-                        // Check if media has contentProtection
-                        if (loadRequestData.media && loadRequestData.media.contentProtection) {
-                            console.log("ContentProtection found:", loadRequestData.media.contentProtection);
-                            
-                            // Move licenseUrl to the correct location
-                            if (loadRequestData.media.contentProtection.licenseUrl) {
-                                loadRequestData.media.customData = loadRequestData.media.customData || {};
-                                loadRequestData.media.customData.licenseUrl = loadRequestData.media.contentProtection.licenseUrl;
-                                console.log("Moved licenseUrl to customData");
-                            }
-                        }
+          // Show debug overlay.
+          castDebugLogger.showDebugLogs(true);
 
-                        return loadRequestData;
-                    } catch (error) {
-                        console.error("Error in LOAD interceptor:", error);
-                        document.body.innerHTML += '<p style="color:red;">Interceptor Error: ' + error.message + '</p>';
-                        return loadRequestData;
-                    }
-                }
-            );
-
-            // Add playback config for DRM
-            const playbackConfig = new cast.framework.PlaybackConfig();
-            
-            // Configure license request handler if needed
-            playbackConfig.licenseRequestHandler = (requestInfo) => {
-                console.log("License request:", requestInfo);
-                return requestInfo;
-            };
-
-            // Start context with options
-            const options = new cast.framework.CastReceiverOptions();
-            options.playbackConfig = playbackConfig;
-            
-            context.start(options);
-            console.log("Custom receiver started successfully");
-            
-            // Show success message on screen
-            document.body.innerHTML += '<h2 style="color:green;">Receiver Started!</h2>';
-            
-        } catch (error) {
-            console.error("Fatal error starting receiver:", error);
-            document.body.innerHTML = '<h1 style="color:red;">Error: ' + error.message + '</h1><pre>' + error.stack + '</pre>';
+          // Clear log messages on debug overlay.
+          castDebugLogger.clearDebugLogs();
         }
+      });
+
+      // Set verbosity level for Core events.
+      castDebugLogger.loggerLevelByEvents = {
+        "cast.framework.events.category.CORE": cast.framework.LoggerLevel.INFO,
+        "cast.framework.events.EventType.MEDIA_STATUS":
+          cast.framework.LoggerLevel.DEBUG,
+      };
+
+      // Set verbosity level for custom tags.
+      castDebugLogger.loggerLevelByTags = {
+        LOG_TAG: cast.framework.LoggerLevel.DEBUG, // display all levels
+      };
+
+      playerManager.setMessageInterceptor(
+        cast.framework.messages.MessageType.LOAD,
+        (loadRequestData) => {
+          // Listed in order from highest to lowest priority.
+          castDebugLogger.error(LOG_TAG, "Test error log");
+
+          castDebugLogger.warn(LOG_TAG, "Test warn log");
+
+          castDebugLogger.info(
+            LOG_TAG,
+            "Intercepting LOAD request",
+            loadRequestData,
+          );
+
+          castDebugLogger.debug(LOG_TAG, "Test debug log");
+
+          return loadRequestData;
+        },
+      );
+
+      context.start();
     </script>
-</body>
+  </body>
 </html>
