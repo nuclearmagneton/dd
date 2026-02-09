@@ -1,41 +1,69 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <script
-      type="text/javascript"
-      src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"
-    ></script>
-  </head>
-  <body>
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/cast/sdk/libs/caf_receiver/v3/cast_receiver_framework.js"></script>
+</head>
+<body>
     <cast-media-player></cast-media-player>
     <script>
-      const context = cast.framework.CastReceiverContext.getInstance();
-      const playerManager = context.getPlayerManager();
+        try {
+            const context = cast.framework.CastReceiverContext.getInstance();
+            const playerManager = context.getPlayerManager();
 
-      // Enable debug logging
-      context.setLoggerLevel(cast.framework.LoggerLevel.DEBUG);
+            // Enable debug logging
+            context.setLoggerLevel(cast.framework.LoggerLevel.DEBUG);
 
-      playerManager.setMessageInterceptor(
-        cast.framework.messages.MessageType.LOAD,
-        (request) => {
-          console.log("Intercepted LOAD request:", request);
+            // Intercept LOAD requests
+            playerManager.setMessageInterceptor(
+                cast.framework.messages.MessageType.LOAD,
+                (loadRequestData) => {
+                    try {
+                        console.log("LOAD request received:", loadRequestData);
 
-          if (request.media && request.media.contentProtection) {
-            console.log(
-              "Moving licenseUrl from contentProtection to media object"
+                        // Check if media has contentProtection
+                        if (loadRequestData.media && loadRequestData.media.contentProtection) {
+                            console.log("ContentProtection found:", loadRequestData.media.contentProtection);
+                            
+                            // Move licenseUrl to the correct location
+                            if (loadRequestData.media.contentProtection.licenseUrl) {
+                                loadRequestData.media.customData = loadRequestData.media.customData || {};
+                                loadRequestData.media.customData.licenseUrl = loadRequestData.media.contentProtection.licenseUrl;
+                                console.log("Moved licenseUrl to customData");
+                            }
+                        }
+
+                        return loadRequestData;
+                    } catch (error) {
+                        console.error("Error in LOAD interceptor:", error);
+                        document.body.innerHTML += '<p style="color:red;">Interceptor Error: ' + error.message + '</p>';
+                        return loadRequestData;
+                    }
+                }
             );
-            request.media.licenseUrl =
-              request.media.contentProtection.licenseUrl;
-          } else {
-            console.log("No contentProtection found in request");
-          }
 
-          return request;
-        },
-      );
+            // Add playback config for DRM
+            const playbackConfig = new cast.framework.PlaybackConfig();
+            
+            // Configure license request handler if needed
+            playbackConfig.licenseRequestHandler = (requestInfo) => {
+                console.log("License request:", requestInfo);
+                return requestInfo;
+            };
 
-      context.start();
-      console.log("Receiver Context Started");
+            // Start context with options
+            const options = new cast.framework.CastReceiverOptions();
+            options.playbackConfig = playbackConfig;
+            
+            context.start(options);
+            console.log("Custom receiver started successfully");
+            
+            // Show success message on screen
+            document.body.innerHTML += '<h2 style="color:green;">Receiver Started!</h2>';
+            
+        } catch (error) {
+            console.error("Fatal error starting receiver:", error);
+            document.body.innerHTML = '<h1 style="color:red;">Error: ' + error.message + '</h1><pre>' + error.stack + '</pre>';
+        }
     </script>
-  </body>
+</body>
 </html>
