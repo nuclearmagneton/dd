@@ -262,7 +262,7 @@
             },
             {
                 "name": "Bitmovin (FMP4)",
-                "link": "https://bitmovin-a.akamaihd.net/content/MI201109210084_1/m3u8s-fmp4/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8"
+                "link": "https://cdn.bitmovin.com/content/assets/art-of-motion-dash-hls-progressive/m3u8s-fmp4/f08e80da-bf1d-4e3d-8899-f0f6155f6efa.m3u8"
             }
         ]
     },
@@ -278,7 +278,7 @@
                 "name": "Super speed (MP4, H264, PlayReady)",
                 "link": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
                 "drmScheme": "playready",
-                "drmLicense": "https://playready.directtaps.net/pr/svc/rightsmanager.asmx"
+                "drmLicense": "http://test.playready.microsoft.com/service/rightsmanager.asmx?cfg=(persist:true,sl:150)"
             }
         ]
     },
